@@ -1,0 +1,6 @@
+app:
+  env: "dev"
+  port: 8080
+postgres:
+  dbDriver : "postgres"
+  database_url : "postgresql://root:passw0rd@localhost:5432/kbtg?sslmode=disable"
