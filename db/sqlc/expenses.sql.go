@@ -13,7 +13,7 @@ import (
 
 const deleteExpenses = `-- name: DeleteExpenses :exec
 DELETE FROM expenses
-WHERE id = ?
+WHERE id = $1
 `
 
 func (q *Queries) DeleteExpenses(ctx context.Context, id int32) error {
@@ -23,7 +23,7 @@ func (q *Queries) DeleteExpenses(ctx context.Context, id int32) error {
 
 const getExpenses = `-- name: GetExpenses :one
 SELECT id, title, amount, note, tags FROM expenses
-WHERE id = ? LIMIT 1
+WHERE id = $1 LIMIT 1
 `
 
 func (q *Queries) GetExpenses(ctx context.Context, id int32) (Expense, error) {
@@ -43,7 +43,7 @@ const insertExpenses = `-- name: InsertExpenses :one
 INSERT INTO expenses (
     title, amount, note, tags
 ) VALUES (
-             ?, ?, ?, ?
+             $1, $2, $3, $4
          ) RETURNING id, title, amount, note, tags
 `
 
@@ -107,24 +107,24 @@ func (q *Queries) ListExpenses(ctx context.Context) ([]Expense, error) {
 }
 
 const updateExpenses = `-- name: UpdateExpenses :one
-UPDATE expenses SET title = ?, amount = ?, note = ?, tags = ? WHERE id = ? RETURNING id, title, amount, note, tags
+UPDATE expenses SET title = $2, amount = $3, note = $4, tags = $5 WHERE id = $1 RETURNING id, title, amount, note, tags
 `
 
 type UpdateExpensesParams struct {
+	ID     int32    `json:"id"`
 	Title  string   `json:"title"`
 	Amount float64  `json:"amount"`
 	Note   string   `json:"note"`
 	Tags   []string `json:"tags"`
-	ID     int32    `json:"id"`
 }
 
 func (q *Queries) UpdateExpenses(ctx context.Context, arg UpdateExpensesParams) (Expense, error) {
 	row := q.db.QueryRowContext(ctx, updateExpenses,
+		arg.ID,
 		arg.Title,
 		arg.Amount,
 		arg.Note,
 		pq.Array(arg.Tags),
-		arg.ID,
 	)
 	var i Expense
 	err := row.Scan(
