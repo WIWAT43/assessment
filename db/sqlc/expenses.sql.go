@@ -74,11 +74,17 @@ func (q *Queries) InsertExpenses(ctx context.Context, arg InsertExpensesParams) 
 
 const listExpenses = `-- name: ListExpenses :many
 SELECT id, title, amount, note, tags FROM expenses
-ORDER BY id
+ORDER BY id LIMIT $1
+OFFSET $2
 `
 
-func (q *Queries) ListExpenses(ctx context.Context) ([]Expense, error) {
-	rows, err := q.db.QueryContext(ctx, listExpenses)
+type ListExpensesParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) ListExpenses(ctx context.Context, arg ListExpensesParams) ([]Expense, error) {
+	rows, err := q.db.QueryContext(ctx, listExpenses, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
