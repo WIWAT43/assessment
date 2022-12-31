@@ -11,7 +11,7 @@ import (
 var testQueries *Queries
 
 func TestMain(m *testing.M) {
-	config.InitViper()
+	config.InitViper("../../")
 	cf := config.GetConfig()
 	conn, err := sql.Open(cf.DbDriver, cf.DbSource)
 	if err != nil {
