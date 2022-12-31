@@ -4,8 +4,7 @@ WHERE id = $1 LIMIT 1;
 
 -- name: ListExpenses :many
 SELECT * FROM expenses
-ORDER BY id LIMIT $1
-OFFSET $2;
+ORDER BY id;
 
 -- name: InsertExpenses :one
 INSERT INTO expenses (

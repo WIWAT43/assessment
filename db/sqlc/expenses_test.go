@@ -67,18 +67,19 @@ func TestQueries_GetExpenses(t *testing.T) {
 }
 
 func TestQueries_ListExpenses(t *testing.T) {
-	arg := ListExpensesParams{
-		Limit:  5,
-		Offset: 5,
-	}
 
 	for i := 0; i < 10; i++ {
 		createExpenses(t)
 	}
 
-	exp, err := testQueries.ListExpenses(context.Background(), arg)
+	exp, err := testQueries.ListExpenses(context.Background())
 	require.NoError(t, err)
-	require.Len(t, exp, 5)
+
+	checker := false
+	if len(exp) >= 10 {
+		checker = true
+	}
+	require.Equal(t, true, checker)
 
 	for _, ex := range exp {
 		require.NotEmpty(t, ex)
