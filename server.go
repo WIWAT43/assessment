@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"log"
 	"net/http"
 )
@@ -18,7 +19,7 @@ type Err struct {
 }
 
 func InsertExpenses(c echo.Context) error {
-	var ex db.Expense
+	var ex db.InsertExpensesParams
 
 	err := c.Bind(&ex)
 
@@ -26,11 +27,30 @@ func InsertExpenses(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
 	}
 
-	return c.JSON(http.StatusCreated, "")
+	dbResult, err := qr.InsertExpenses(context.Background(), ex)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	return c.JSON(http.StatusCreated, dbResult)
 }
 func UpdateExpenses(c echo.Context) error {
+	var ex db.UpdateExpensesParams
 
-	return c.JSON(http.StatusOK, "")
+	err := c.Bind(&ex)
+
+	log.Println(ex)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
+	}
+
+	dbResult, err := qr.UpdateExpenses(context.Background(), ex)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, err)
+	}
+
+	return c.JSON(http.StatusOK, dbResult)
 }
 
 func GetExpenses(c echo.Context) error {
@@ -46,7 +66,7 @@ func GetExpenses(c echo.Context) error {
 
 	ex, err := qr.GetExpenses(context.Background(), int32(intValue))
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, err)
+		return c.JSON(http.StatusBadRequest, err)
 	}
 
 	return c.JSON(http.StatusOK, ex)
@@ -72,12 +92,14 @@ func main() {
 	if err != nil {
 		log.Fatal("Can not connect to db: ", err)
 	}
-
 	qr = db.New(conn)
 
-	//e.POST("/expenses", InsertExpenses)
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+
+	e.POST("/expenses", InsertExpenses)
 	e.GET("/expenses/:id", GetExpenses)
-	//e.PUT("/expenses/:id", UpdateExpenses)
+	e.PUT("/expenses/:id", UpdateExpenses)
 	e.GET("/expenses", GetAllExpenses)
 
 	log.Fatal(e.Start(cf.SrPort))
