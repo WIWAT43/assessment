@@ -10,6 +10,10 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 var qr *db.Queries
@@ -115,4 +119,22 @@ func main() {
 
 	log.Fatal(e.Start(cf.SrPort))
 
+	go func() {
+		if err := e.Start(cf.SrPort); err != nil && err != http.ErrServerClosed {
+			e.Logger.Fatal("Shutting down the server")
+		}
+	}()
+
+	shutdown := make(chan os.Signal, 1)
+
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
+
+	<-shutdown
+	fmt.Println("Shutting down")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := e.Shutdown(ctx); err != nil {
+		fmt.Println("Shutting ERROR", err)
+	}
+	fmt.Println("Bye Bye")
 }
