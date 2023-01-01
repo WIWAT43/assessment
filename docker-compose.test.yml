@@ -1,0 +1,31 @@
+version: "3.3"
+
+networks:
+  assessment-network-test:
+
+services:
+  kbtg_assessment:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.test
+    volumes:
+      - $PWD:/go/src/target
+    depends_on:
+      - db
+    networks:
+      - assessment-network-test
+  db:
+    image: postgres:12-alpine
+    ports:
+      - "5432:5432"
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: passw0rd
+      POSTGRES_DB: kbtg
+    restart: on-failure
+    volumes:
+      - ./db/migrations:/docker-entrypoint-initdb.d/
+    networks:
+      - assessment-network-test
