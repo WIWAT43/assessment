@@ -29,7 +29,7 @@ func InsertExpenses(c echo.Context) error {
 
 	dbResult, err := qr.InsertExpenses(context.Background(), ex)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
 	}
 
 	return c.JSON(http.StatusCreated, dbResult)
@@ -44,10 +44,21 @@ func UpdateExpenses(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
 	}
 
+	id := c.Param("id")
+	intValue := 0
+
+	_, err = fmt.Sscan(id, &intValue)
+
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
+	}
+
+	ex.ID = int32(intValue)
+
 	dbResult, err := qr.UpdateExpenses(context.Background(), ex)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
 	}
 
 	return c.JSON(http.StatusOK, dbResult)
@@ -61,12 +72,12 @@ func GetExpenses(c echo.Context) error {
 	_, err := fmt.Sscan(id, &intValue)
 
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, id)
+		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
 	}
 
 	ex, err := qr.GetExpenses(context.Background(), int32(intValue))
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, err)
+		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
 	}
 
 	return c.JSON(http.StatusOK, ex)
@@ -77,7 +88,7 @@ func GetAllExpenses(c echo.Context) error {
 	exList, err := qr.ListExpenses(context.Background())
 
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, exList)
+		return c.JSON(http.StatusInternalServerError, Err{Message: err.Error()})
 	}
 	return c.JSON(http.StatusOK, exList)
 }
